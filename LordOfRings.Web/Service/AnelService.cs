@@ -43,13 +43,31 @@ public class AnelService
 
     public async Task<AnelDto> ObterPorId(Guid id)
     {
-        var response = await _httpClient.GetAsync($"api/aneis/{id}");
-        response.EnsureSuccessStatusCode();
+        try
+        {
+            var response = await _httpClient.GetAsync($"api/aneis/{id}");
+            var content = await response.Content.ReadAsStringAsync();
 
-        var content = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<Result<AnelDto>>(content, _jsonOptions);
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorResult = JsonSerializer.Deserialize<Result<AnelDto>>(content, _jsonOptions);
+                throw new HttpRequestException(errorResult?.Error ?? "Erro ao obter o anel");
+            }
 
-        return result?.Data;
+            // Deserialize directly to AnelDto since the API returns unwrapped data
+            var anel = JsonSerializer.Deserialize<AnelDto>(content, _jsonOptions);
+            if (anel == null)
+            {
+                throw new HttpRequestException("Anel não encontrado");
+            }
+
+            return anel;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao obter anel por ID: {Id}", id);
+            throw;
+        }
     }
 
     public async Task<AnelDto> Criar(AnelDto anel)
@@ -61,33 +79,34 @@ public class AnelService
 
         var response = await _httpClient.PostAsync("api/aneis", content);
         var responseContent = await response.Content.ReadAsStringAsync();
-    
+        var result = JsonSerializer.Deserialize<Result<AnelDto>>(responseContent, _jsonOptions);
+
         if (!response.IsSuccessStatusCode)
         {
-            var errorResult = JsonSerializer.Deserialize<Result<AnelDto>>(responseContent, _jsonOptions);
-            throw new HttpRequestException(errorResult?.Error ?? "Erro desconhecido ao criar o anel", 
-                null, response.StatusCode);
+            throw new HttpRequestException(result?.Error ?? "Erro desconhecido ao criar o anel");
         }
 
-        var result = JsonSerializer.Deserialize<Result<AnelDto>>(responseContent, _jsonOptions);
         return result?.Data;
     }
 
     public async Task<AnelDto> Atualizar(AnelDto anel)
+{
+    var content = new StringContent(
+        JsonSerializer.Serialize(anel, _jsonOptions),
+        Encoding.UTF8,
+        "application/json");
+
+    var response = await _httpClient.PutAsync("api/aneis", content);
+    var responseContent = await response.Content.ReadAsStringAsync();
+    var result = JsonSerializer.Deserialize<Result<AnelDto>>(responseContent, _jsonOptions);
+
+    if (!response.IsSuccessStatusCode)
     {
-        var content = new StringContent(
-            JsonSerializer.Serialize(anel, _jsonOptions),
-            Encoding.UTF8,
-            "application/json");
-
-        var response = await _httpClient.PutAsync("api/aneis", content);
-        response.EnsureSuccessStatusCode();
-
-        var responseContent = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<Result<AnelDto>>(responseContent, _jsonOptions);
-
-        return result?.Data;
+        throw new HttpRequestException(result?.Error ?? "Erro desconhecido ao atualizar o anel");
     }
+
+    return result?.Data;
+}
 
     public async Task Deletar(Guid id)
     {

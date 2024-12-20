@@ -19,14 +19,7 @@ public static class DependencyInjection
         services.AddDbContext<AnelDbContext>(options =>
             options.UseSqlServer(
                 configuration.GetConnectionString("DefaultConnection")));
-
-        // services.AddAutoMapper(cfg =>
-        // {
-        //     cfg.CreateMap<Anel, AnelDto>()
-        //         .ForMember(dest => dest.Portador,
-        //             opt => opt.MapFrom(src => src.Portador.ToString()));
-        // });
-
+        
         services.AddAutoMapper(cfg =>
         {
             cfg.CreateMap<Anel, AnelDto>();

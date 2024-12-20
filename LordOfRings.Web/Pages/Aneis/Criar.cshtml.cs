@@ -30,21 +30,24 @@ public class CriarModel : PageModel
     public async Task<IActionResult> OnPostAsync()
     {
         if (!ModelState.IsValid)
+        {
             return Page();
+        }
 
         try
         {
             var result = await _anelService.Criar(Anel);
-            if (result != null)
-            {
-                TempData["Success"] = "Anel criado com sucesso!";
-                return RedirectToPage("./Index");
-            }
-
-            return Page();
+            TempData["Success"] = "Anel criado com sucesso!";
+            return RedirectToPage("./Index");
         }
         catch (HttpRequestException ex)
         {
+            ModelState.AddModelError(string.Empty, ex.Message);
+            return Page();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao criar anel");
             ModelState.AddModelError(string.Empty, "Erro ao criar o anel. Tente novamente mais tarde.");
             return Page();
         }
