@@ -1,0 +1,42 @@
+@page
+@model LordOfRings.Web.Pages.Aneis.IndexModel
+@{
+    ViewData["Title"] = "Anéis de Poder";
+}
+
+<div class="container mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Anéis de Poder</h1>
+        <a asp-page="./Criar" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Criar Novo Anel
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach (var anel in Model.Aneis)
+        {
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <img src="@anel.Imagem" alt="@anel.Nome" class="w-full h-48 object-cover"/>
+                <div class="p-4">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-2">@anel.Nome</h2>
+                    <p class="text-gray-600 mb-2">@anel.Poder</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Portador: @anel.Portador</span>
+                        <span class="text-sm text-gray-500">Forjado por: @anel.ForjadoPor</span>
+                    </div>
+                    <div class="mt-4 flex justify-end space-x-2">
+                        <a asp-page="./Editar" asp-route-id="@anel.Id" class="text-blue-600 hover:text-blue-800">
+                            Editar
+                        </a>
+                        <form method="post" asp-page-handler="Delete" asp-route-id="@anel.Id"
+                              onsubmit="return confirm('Deseja realmente excluir este anel?');">
+                            <button type="submit" class="text-red-600 hover:text-red-800">
+                                Excluir
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
